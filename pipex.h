@@ -9,4 +9,7 @@
 # include <sys/types.h>
 # include <stdio.h>
 
+char	*get_path(char *cmd, char **envp);
+void	manage_files(char *infile, char *outfile, int fds[2]);
+
 #endif
