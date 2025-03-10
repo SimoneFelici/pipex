@@ -40,24 +40,25 @@ char	*get_path(char *cmd, char **envp)
 	return (NULL);
 }
 
-void	manage_files(char *infile, char *outfile, int fds[2])
+void	open_files(t_vars *vars)
 {
-	fds[0] = open(infile, O_RDONLY);
-	if (fds[0] < 0)
+	vars->infile_fd = open(vars->argv[1], O_RDONLY);
+	if (vars->infile_fd < 0)
 	{
-		perror(infile);
-		fds[0] = open("/dev/null", O_RDONLY);
-		if (fds[0] < 0)
+		perror(vars->argv[1]);
+		vars->infile_fd = open("/dev/null", O_RDONLY);
+		if (vars->infile_fd < 0)
 		{
-			perror("/dev/null");
+			perror("open /dev/null");
 			exit(1);
 		}
 	}
-	fds[1] = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (fds[1] < 0)
+	vars->outfile_fd = open(vars->argv[vars->argc - 1],
+			O_CREAT | O_WRONLY | O_TRUNC, 0644);
+	if (vars->outfile_fd < 0)
 	{
-		perror(outfile);
-		close(fds[0]);
+		perror(vars->argv[vars->argc - 1]);
+		close(vars->infile_fd);
 		exit(1);
 	}
 }

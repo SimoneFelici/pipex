@@ -1,9 +1,9 @@
 #include "pipex.h"
 
-static void execute_command(char *cmd, char **envp, int input_fd, int output_fd)
+static void	execute_command(char *cmd, char **envp, int input_fd, int output_fd)
 {
-	char **args;
-	char *path;
+	char	**args;
+	char	*path;
 
 	dup2(input_fd, STDIN_FILENO);
 	dup2(output_fd, STDOUT_FILENO);
@@ -22,57 +22,49 @@ static void execute_command(char *cmd, char **envp, int input_fd, int output_fd)
 	exit(1);
 }
 
-static void loop_commands(int argc, char **argv, char **envp, int infile_fd, int outfile_fd)
+static void	loop_commands(t_vars *vars)
 {
-	int fd[2];
-	int i;
-	int prev_fd;
+	int		i;
+	pid_t	pid;
 
-	prev_fd = infile_fd;
+	vars->prev_fd = vars->infile_fd;
 	i = 2;
-	while (i < argc - 1)
+	while (i < vars->argc - 1)
 	{
-		pipe(fd);
-		pid_t pid = fork();
-
+		pipe(vars->pipe_fd);
+		pid = fork();
 		if (pid == 0)
 		{
-			if (i == argc - 2)
-				execute_command(argv[i], envp, prev_fd, outfile_fd);
+			if (i == vars->argc - 2)
+				execute_command(vars->argv[i], vars->envp, \
+					vars->prev_fd, vars->outfile_fd);
 			else
-				execute_command(argv[i], envp, prev_fd, fd[1]);
+				execute_command(vars->argv[i], vars->envp, \
+					vars->prev_fd, vars->pipe_fd[1]);
 		}
-		close(fd[1]);
-		if (prev_fd != infile_fd)
-			close(prev_fd);
-		prev_fd = fd[0];
+		close(vars->pipe_fd[1]);
+		if (vars->prev_fd != vars->infile_fd)
+			close(vars->prev_fd);
+		vars->prev_fd = vars->pipe_fd[0];
 		i++;
 	}
-	close(prev_fd);
+	close(vars->prev_fd);
 }
 
-int main(int argc, char **argv, char **envp)
+int	main(int argc, char **argv, char **envp)
 {
-	int infile_fd;
-	int outfile_fd;
+	t_vars	vars;
 
-	if (argc != 5)
+	if (argc < 5)
 		return (1);
-	infile_fd = open(argv[1], O_RDONLY);
-	if (infile_fd < 0)
-	{
-		perror(argv[1]);
-		exit(1);
-	}
-	outfile_fd = open(argv[4], O_CREAT | O_WRONLY | O_TRUNC, 0644);
-	if (outfile_fd < 0)
-	{
-		perror(argv[4]);
-		exit(1);
-	}
-	loop_commands(argc, argv, envp, infile_fd, outfile_fd);
-	close(infile_fd);
-	close(outfile_fd);
-	while (wait(NULL) > 0);
+	vars.argc = argc;
+	vars.argv = argv;
+	vars.envp = envp;
+	open_files(&vars);
+	loop_commands(&vars);
+	close(vars.infile_fd);
+	close(vars.outfile_fd);
+	while (wait(NULL) > 0)
+		;
 	return (0);
 }
