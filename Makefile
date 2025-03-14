@@ -2,7 +2,7 @@ NAME = pipex
 CC = clang
 CFLAGS = #-Wall -Wextra -Werror
 
-SRC = main.c utils.c
+SRC = main.c utils.c here_doc.c
 OBJ = $(SRC:.c=.o)
 
 LIBFT_DIR = ./libft

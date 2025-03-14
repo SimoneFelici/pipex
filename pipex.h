@@ -19,9 +19,12 @@ typedef struct s_vars
 	char	**envp;
 	char	**argv;
 	int		argc;
-} t_vars;
+}	t_vars;
 
 char	*get_path(char *cmd, char **envp);
 void	open_files(t_vars *vars);
+void	here_doc(t_vars *vars);
+void	here_doc_input(char *limiter, int output_fd);
+void	open_here_doc(t_vars *vars);
 
 #endif

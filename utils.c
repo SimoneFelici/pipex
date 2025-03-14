@@ -40,6 +40,17 @@ char	*get_path(char *cmd, char **envp)
 	return (NULL);
 }
 
+void	open_here_doc(t_vars *vars)
+{
+	vars->outfile_fd = open(vars->argv[vars->argc - 1],
+			O_CREAT | O_WRONLY | O_APPEND, 0644);
+	if (vars->outfile_fd < 0)
+	{
+		perror(vars->argv[vars->argc - 1]);
+		exit(1);
+	}
+}
+
 void	open_files(t_vars *vars)
 {
 	vars->infile_fd = open(vars->argv[1], O_RDONLY);

@@ -22,30 +22,51 @@ static void	execute_command(char *cmd, char **envp, int input_fd, int output_fd)
 	exit(1);
 }
 
-static void	loop_commands(t_vars *vars)
+static void	child_process(t_vars *vars, int i)
 {
-	int		i;
+	if (i == vars->argc - 2)
+		execute_command(vars->argv[i], vars->envp,
+			vars->prev_fd, vars->outfile_fd);
+	else
+		execute_command(vars->argv[i], vars->envp,
+			vars->prev_fd, vars->pipe_fd[1]);
+}
+
+static void	fork_and_exec(t_vars *vars, int i)
+{
 	pid_t	pid;
 
+	if (pipe(vars->pipe_fd) < 0)
+	{
+		perror("pipe");
+		exit(EXIT_FAILURE);
+	}
+	pid = fork();
+	if (pid < 0)
+	{
+		perror("fork");
+		exit(EXIT_FAILURE);
+	}
+	if (pid == 0)
+		child_process(vars, i);
+	close(vars->pipe_fd[1]);
+	if (vars->prev_fd != vars->infile_fd)
+		close(vars->prev_fd);
+	vars->prev_fd = vars->pipe_fd[0];
+}
+
+static void	loop_commands(t_vars *vars)
+{
+	int	i;
+
 	vars->prev_fd = vars->infile_fd;
-	i = 2;
+	if (!ft_strncmp(vars->argv[1], "here_doc", 9))
+		i = 3;
+	else
+		i = 2;
 	while (i < vars->argc - 1)
 	{
-		pipe(vars->pipe_fd);
-		pid = fork();
-		if (pid == 0)
-		{
-			if (i == vars->argc - 2)
-				execute_command(vars->argv[i], vars->envp, \
-					vars->prev_fd, vars->outfile_fd);
-			else
-				execute_command(vars->argv[i], vars->envp, \
-					vars->prev_fd, vars->pipe_fd[1]);
-		}
-		close(vars->pipe_fd[1]);
-		if (vars->prev_fd != vars->infile_fd)
-			close(vars->prev_fd);
-		vars->prev_fd = vars->pipe_fd[0];
+		fork_and_exec(vars, i);
 		i++;
 	}
 	close(vars->prev_fd);
@@ -60,7 +81,12 @@ int	main(int argc, char **argv, char **envp)
 	vars.argc = argc;
 	vars.argv = argv;
 	vars.envp = envp;
-	open_files(&vars);
+	if (!strncmp(argv[1], "here_doc", 9))
+	{
+		here_doc(&vars);
+	}
+	else
+		open_files(&vars);
 	loop_commands(&vars);
 	close(vars.infile_fd);
 	close(vars.outfile_fd);
