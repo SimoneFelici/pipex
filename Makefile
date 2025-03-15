@@ -1,6 +1,6 @@
 NAME = pipex
 CC = clang
-CFLAGS = #-Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror
 
 SRC = main.c utils.c here_doc.c
 OBJ = $(SRC:.c=.o)

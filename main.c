@@ -34,16 +34,6 @@ static void	execute_command(char *cmd, char **envp, int input_fd, int output_fd)
 	exit(126);
 }
 
-static void	child_process(t_vars *vars, int i)
-{
-	if (i == vars->argc - 2)
-		execute_command(vars->argv[i], vars->envp,
-			vars->prev_fd, vars->outfile_fd);
-	else
-		execute_command(vars->argv[i], vars->envp,
-			vars->prev_fd, vars->pipe_fd[1]);
-}
-
 static void	fork_and_exec(t_vars *vars, int i)
 {
 	pid_t	pid;
