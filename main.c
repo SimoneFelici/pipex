@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sfelici <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/03/15 13:12:54 by sfelici           #+#    #+#             */
+/*   Updated: 2025/03/15 13:12:56 by sfelici          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "pipex.h"
 
 static void	execute_command(char *cmd, char **envp, int input_fd, int output_fd)
@@ -15,11 +27,11 @@ static void	execute_command(char *cmd, char **envp, int input_fd, int output_fd)
 	{
 		ft_putstr_fd(args[0], 2);
 		ft_putstr_fd(": command not found\n", 2);
-		exit(1);
+		exit(127);
 	}
 	execve(path, args, envp);
-	perror("execve");
-	exit(1);
+	perror(args[0]);
+	exit(126);
 }
 
 static void	child_process(t_vars *vars, int i)
@@ -35,24 +47,27 @@ static void	child_process(t_vars *vars, int i)
 static void	fork_and_exec(t_vars *vars, int i)
 {
 	pid_t	pid;
+	int		pipe_fd[2];
 
-	if (pipe(vars->pipe_fd) < 0)
-	{
-		perror("pipe");
-		exit(EXIT_FAILURE);
-	}
+	if (pipe(pipe_fd) == -1)
+		exit((perror("pipe"), 1));
 	pid = fork();
-	if (pid < 0)
-	{
-		perror("fork");
-		exit(EXIT_FAILURE);
-	}
+	if (pid == -1)
+		exit((perror("fork"), 1));
 	if (pid == 0)
-		child_process(vars, i);
-	close(vars->pipe_fd[1]);
+	{
+		close(pipe_fd[0]);
+		if (i == vars->argc - 2)
+			execute_command(vars->argv[i], vars->envp, \
+				vars->prev_fd, vars->outfile_fd);
+		else
+			execute_command(vars->argv[i], vars->envp, \
+				vars->prev_fd, pipe_fd[1]);
+	}
+	close(pipe_fd[1]);
 	if (vars->prev_fd != vars->infile_fd)
 		close(vars->prev_fd);
-	vars->prev_fd = vars->pipe_fd[0];
+	vars->prev_fd = pipe_fd[0];
 }
 
 static void	loop_commands(t_vars *vars)
@@ -92,5 +107,4 @@ int	main(int argc, char **argv, char **envp)
 	close(vars.outfile_fd);
 	while (wait(NULL) > 0)
 		;
-	return (0);
 }
