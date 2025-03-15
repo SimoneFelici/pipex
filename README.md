@@ -31,4 +31,6 @@ Redirections and pipes
 
 "access": check file permissions.
 
-[...] (I forgot to updated it💀)
+[...]
+
+(I forgot to updated it💀)
