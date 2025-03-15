@@ -30,3 +30,5 @@ Redirections and pipes
 "open": get FD of infile, if outfile exists, get FD of outfile, else crete outfile and get FD.
 
 "access": check file permissions.
+
+[...] (I forgot to updated it💀)
